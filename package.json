@@ -1,0 +1,30 @@
+{
+  "name": "Daily-Diet-API",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "repository": "https://github.com/rayaneacacio/Daily-Diet-API.git",
+  "author": "Rayane Acacio <rayane.acacio@jbq.global>",
+  "license": "MIT",
+  "scripts": {
+    "dev": "tsx src/server.ts",
+    "watch": "tsx watch src/server.ts",
+    "knex": "node --import tsx ./node_modules/.bin/knex"
+  },
+  "dependencies": {
+    "@types/bcryptjs": "^3.0.0",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.4.1",
+    "fastify": "^5.8.4",
+    "knex": "^3.2.9",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@fastify/cookie": "^11.0.2",
+    "@types/node": "^25.5.2",
+    "sqlite3": "^6.0.1",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.3"
+  }
+}
