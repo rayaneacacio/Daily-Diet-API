@@ -22,7 +22,9 @@
   "devDependencies": {
     "@fastify/cookie": "^11.0.2",
     "@types/node": "^25.5.2",
+    "@types/supertest": "^7.2.0",
     "sqlite3": "^6.0.1",
+    "supertest": "^7.2.2",
     "tsx": "^4.21.0",
     "typescript": "^6.0.2",
     "vitest": "^4.1.3"

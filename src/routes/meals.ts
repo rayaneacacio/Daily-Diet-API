@@ -73,17 +73,18 @@ export const mealsRoutes = async(app: FastifyInstance) => {
         id: z.string().uuid() 
       });
       const { id } = getMealParamsSchema.parse(req.params);
+      const { userId } = req.cookies;
 
-      const meal = await knex('meals').where({ id }).select().first();
+      const meal = await knex('meals').where({ id, 'user_id': userId }).select().first();
 
       if (!meal) throw new Error('Meal not found');
 
-      return res.status(200).send({ meals: formatOnDietBoolean(meal) });
+      return res.status(200).send({ meal: formatOnDietBoolean(meal) });
       
     } catch(error) {
       const err = error as { message: string; };
 
-      if (err.message === 'Meal not found') return res.status(400).send({ error: 'Meal not found' });
+      if (err.message === 'Meal not found') return res.status(404).send({ error: 'Meal not found' });
 
       return res.status(500).send({ error: 'Internal Server Error' });
     };
@@ -93,13 +94,22 @@ export const mealsRoutes = async(app: FastifyInstance) => {
     try {
       const { userId } = req.cookies;
 
-      const meals = await knex('meals').where('user_id', userId).select();
+      const meals = await knex('meals').where('user_id', userId).select().orderBy('timestamp', 'asc');;
 
       const totalMeals = meals.length;
-      const onDietMeals = meals.filter(meal => meal.on_diet === 1).length;
-      const offDietMeals = meals.filter(meal => meal.on_diet !== 1).length;
+      const onDietMeals = meals.filter(meal => Boolean(meal.on_diet)).length;
+      const offDietMeals = meals.filter(meal => !Boolean(meal.on_diet)).length;
 
-      const summary = { totalMeals, onDietMeals, offDietMeals };
+      const bestStreak = meals.reduce((acc, meal) => {
+        if (meal.on_diet) {
+          acc.current++;
+          acc.best = Math.max(acc.best, acc.current);
+        } else acc.current = 0;
+        
+        return acc;
+      }, { current: 0, best: 0 }).best;
+
+      const summary = { totalMeals, onDietMeals, offDietMeals, bestStreak };
 
       return res.status(200).send({ summary });
 
@@ -119,8 +129,16 @@ export const mealsRoutes = async(app: FastifyInstance) => {
       const putMealBodySchema = z.object({
         name: z.string(),
         description: z.string(),
-        timestamp: z.coerce.date(),
-        on_diet: z.boolean()
+        on_diet: z.boolean(),
+        timestamp: z.string().transform((val) => {
+          const [date, time] = val.split(' ');
+
+          if(!date) return;
+          
+          const [day, month, year] = date.split('/');
+  
+          return new Date(`${year}-${month}-${day}T${time}:00.000Z`);
+        }),
       }).partial();
 
       const { id } = putMealParamsSchema.parse(req.params);
@@ -142,7 +160,7 @@ export const mealsRoutes = async(app: FastifyInstance) => {
 
       await knex('meals').where({ id }).update(newMeal);
 
-      return res.status(200).send({ meals: formatOnDietBoolean(newMeal) });
+      return res.status(200).send({ meal: formatOnDietBoolean(newMeal) });
       
     } catch(error) {
       const err = error as { message: string; };
@@ -161,8 +179,11 @@ export const mealsRoutes = async(app: FastifyInstance) => {
         id: z.string().uuid() 
       });
       const { id } = deleteMealParamsSchema.parse(req.params);
+      const { userId } = req.cookies;
 
-      await knex('meals').where({ id }).delete();
+      const deleted = await knex('meals').where({ id, 'user_id': userId }).delete();
+
+      if (!Boolean(deleted)) throw new Error('Meal not found');
 
       return res.status(200).send();
       

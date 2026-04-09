@@ -73,7 +73,7 @@ export const usersRoutes = async(app: FastifyInstance) => {
     } catch (error) {
       const err = error as { message: string; };
 
-      if (err.message === 'Invalid User') res.status(401).send({ error: 'Invalid User' });
+      if (err.message === 'Invalid User') return res.status(401).send({ error: 'Invalid User' });
       
       return res.status(500).send({ error: 'Internal Server Error' });
     }
