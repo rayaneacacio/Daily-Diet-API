@@ -3,6 +3,10 @@ import { knex } from "../database";
 import { randomUUID } from "crypto";
 import z, { ZodError } from "zod";
 import { compare, hash } from "bcryptjs";
+import { sendError } from "../utils/send-error";
+import { locales } from "../locales";
+
+const { ALREADY_EXISTS_EMAIL_SQLITE_ERROR, ALREADY_EXISTS_EMAIL_ERROR, INVALID_USER_ERROR } = locales;
 
 export const usersRoutes = async(app: FastifyInstance) => {
   app.post('/', async(req, res) => {
@@ -35,11 +39,9 @@ export const usersRoutes = async(app: FastifyInstance) => {
         errors: z.flattenError(err)
       });
 
-      if (err.message.includes('SQLITE_CONSTRAINT: UNIQUE constraint failed: users.email')) return res.status(409).send({
-        error: "Already exists user with this email."
-      });
+      if (err.message.includes(ALREADY_EXISTS_EMAIL_SQLITE_ERROR)) return sendError(res, 409, ALREADY_EXISTS_EMAIL_ERROR)
       
-      return res.status(500).send({ error: 'Internal Server Error' });
+      sendError(res);
     };
   });
 
@@ -57,11 +59,11 @@ export const usersRoutes = async(app: FastifyInstance) => {
         .select()
         .first();
 
-      if (!user) throw new Error('Invalid User');
+      if (!user) throw new Error(INVALID_USER_ERROR);
 
       const passwordMatch = await compare(password, user.password);
 
-      if (!passwordMatch) throw new Error('Invalid User');
+      if (!passwordMatch) throw new Error(INVALID_USER_ERROR);
 
       res.setCookie('userId', user.id, {
         path: '/',
@@ -73,9 +75,9 @@ export const usersRoutes = async(app: FastifyInstance) => {
     } catch (error) {
       const err = error as { message: string; };
 
-      if (err.message === 'Invalid User') return res.status(401).send({ error: 'Invalid User' });
+      if (err.message === INVALID_USER_ERROR) return sendError(res, 401, INVALID_USER_ERROR);
       
-      return res.status(500).send({ error: 'Internal Server Error' });
+      sendError(res);
     }
   });
 };

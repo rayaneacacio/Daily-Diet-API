@@ -5,6 +5,10 @@ import { knex } from "../database";
 import { checkUserId } from "../middlewares/check-user-id";
 import type { tMeal } from "../@types/knex.s";
 import { checkId } from "../middlewares/check-id";
+import { sendError } from "../utils/send-error";
+import { locales } from "../locales";
+
+const { MEAL_NOT_FOUND_ERROR } = locales;
 
 const formatOnDietBoolean = (meal: tMeal) => {
   return {...meal, on_diet: Boolean(meal.on_diet)};
@@ -46,7 +50,7 @@ export const mealsRoutes = async(app: FastifyInstance) => {
         errors: z.flattenError(err)
       });
   
-      return res.status(500).send({ error: 'Internal Server Error' });
+      sendError(res);
     };
   });
 
@@ -61,7 +65,7 @@ export const mealsRoutes = async(app: FastifyInstance) => {
       return res.status(200).send({ meals: formattedMeals });
       
     } catch(error) {
-      return res.status(500).send({ error: 'Internal Server Error' });
+      sendError(res);
     };
   });
 
@@ -77,16 +81,16 @@ export const mealsRoutes = async(app: FastifyInstance) => {
 
       const meal = await knex('meals').where({ id, 'user_id': userId }).select().first();
 
-      if (!meal) throw new Error('Meal not found');
+      if (!meal) throw new Error(MEAL_NOT_FOUND_ERROR);
 
       return res.status(200).send({ meal: formatOnDietBoolean(meal) });
       
     } catch(error) {
       const err = error as { message: string; };
 
-      if (err.message === 'Meal not found') return res.status(404).send({ error: 'Meal not found' });
+      if (err.message === MEAL_NOT_FOUND_ERROR) return sendError(res, 404, MEAL_NOT_FOUND_ERROR);
 
-      return res.status(500).send({ error: 'Internal Server Error' });
+      sendError(res);
     };
   });
 
@@ -114,7 +118,7 @@ export const mealsRoutes = async(app: FastifyInstance) => {
       return res.status(200).send({ summary });
 
     } catch (error) {
-      return res.status(500).send({ error: 'Internal Server Error' });
+      sendError(res);
     }
   });
 
@@ -147,7 +151,7 @@ export const mealsRoutes = async(app: FastifyInstance) => {
 
       const meal = await knex('meals').where({ id, user_id: userId }).select().first();
 
-      if (!meal) throw new Error('Meal not found');
+      if (!meal) throw new Error(MEAL_NOT_FOUND_ERROR);
 
       const newMeal = {
         ...meal,
@@ -165,9 +169,9 @@ export const mealsRoutes = async(app: FastifyInstance) => {
     } catch(error) {
       const err = error as { message: string; };
 
-      if (err.message === 'Meal not found') return res.status(400).send({ error: 'Meal not found' });
+      if (err.message === MEAL_NOT_FOUND_ERROR) return sendError(res, 404, MEAL_NOT_FOUND_ERROR);
 
-      return res.status(500).send({ error: 'Internal Server Error' });
+      sendError(res);
     };
   });
 
@@ -183,16 +187,16 @@ export const mealsRoutes = async(app: FastifyInstance) => {
 
       const deleted = await knex('meals').where({ id, 'user_id': userId }).delete();
 
-      if (!Boolean(deleted)) throw new Error('Meal not found');
+      if (!Boolean(deleted)) throw new Error(MEAL_NOT_FOUND_ERROR);
 
       return res.status(200).send();
       
     } catch(error) {
       const err = error as { message: string; };
 
-      if (err.message === 'Meal not found') return res.status(400).send({ error: 'Meal not found' });
+      if (err.message === MEAL_NOT_FOUND_ERROR) return sendError(res, 404, MEAL_NOT_FOUND_ERROR);
 
-      return res.status(500).send({ error: 'Internal Server Error' });
+      sendError(res);
     };
   });
 };
