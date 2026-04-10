@@ -12,7 +12,7 @@
   "scripts": {
     "dev": "tsx src/server.ts",
     "watch": "tsx watch src/server.ts",
-    "knex": "node --import tsx ./node_modules/.bin/knex",
+    "tsx": "node --import tsx ./node_modules/.bin/knex",
     "build": "tsup src"
   },
   "dependencies": {
