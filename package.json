@@ -13,9 +13,7 @@
     "dev": "tsx src/server.ts",
     "watch": "tsx watch src/server.ts",
     "tsx": "node --import tsx ./node_modules/.bin/knex",
-    "build": "tsup src",
-    "knex": "tsx ./node_modules/.bin/knex",
-    "migrate": "npm run knex migrate:latest"
+    "build": "tsup src"
   },
   "dependencies": {
     "@types/bcryptjs": "^3.0.0",
