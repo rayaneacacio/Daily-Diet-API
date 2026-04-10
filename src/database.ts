@@ -2,13 +2,14 @@ import setupKnex from 'knex';
 import type { Knex } from 'knex';
 import env  from './env/index.js';
 
-const connection = env.DATABASE_CLIENT === 'sqlite' ? {
-  filename: env.DATABASE_URL,
-} : env.DATABASE_URL
-
 export const config: Knex.Config = {
   client: env.DATABASE_CLIENT,
-  connection,
+  connection: {
+    connectionString: process.env.DATABASE_URL, // Sua URL do banco (postgres://...)
+    ssl: {
+      rejectUnauthorized: false 
+    }
+  },
   useNullAsDefault: true,
   migrations: {
     extension: 'ts',
